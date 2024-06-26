@@ -1,14 +1,20 @@
 import scapy.all as scapy
 import os
-from dotenv import load_dotenv, dotenv_values 
-load_dotenv() 
+from dotenv import load_dotenv
 
-# Set the interface to monitor mode
-### scapy.conf.iface = os.getenv("INTERFACE_NAME") # Uncumment this and create .env in order for this to work
-# Create a dictionary to store the probe requests
+load_dotenv()
+
+interface_name = os.getenv("INTERFACE_NAME")
+if not interface_name:
+    print("Error: INTERFACE_NAME environment variable is not set")
+    exit(1)
+
+print(f"Using interface: {interface_name}")
+
+scapy.conf.iface = interface_name
+
 probe_requests = {}
 
-# Define a function to process the probe requests
 def process_probe_request(pkt):
     if pkt.haslayer(scapy.Dot11) and pkt.type == 0 and pkt.subtype == 4:
         mac_addr = pkt.addr2
@@ -17,10 +23,16 @@ def process_probe_request(pkt):
             probe_requests[mac_addr] = []
         if ssid not in probe_requests[mac_addr]:
             probe_requests[mac_addr].append(ssid)
+        print(f"Captured probe request: {mac_addr} -> {ssid}")
 
-# Start sniffing in monitor mode
-scapy.sniff(prn=process_probe_request, filter="", monitor=True)
+try:
+    scapy.sniff(prn=process_probe_request, iface=interface_name)
+except Exception as e:
+    print(f"Error: {e}")
 
-# Print the probe requests
+print("")
+
 for mac_addr, ssids in probe_requests.items():
     print(f"MAC Address: {mac_addr}, Frequently Used APs: {', '.join(ssids)}")
+
+print('EXIT')
