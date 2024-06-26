@@ -1,6 +1,7 @@
-import scapy.all as scapy
 import os
 from dotenv import load_dotenv
+import scapy.all as scapy
+# import pyshark
 
 load_dotenv()
 
@@ -10,8 +11,6 @@ if not interface_name:
     exit(1)
 
 print(f"Using interface: {interface_name}")
-
-scapy.conf.iface = interface_name
 
 probe_requests = {}
 
@@ -27,6 +26,17 @@ def process_probe_request(pkt):
 
 try:
     scapy.sniff(prn=process_probe_request, iface=interface_name)
+    # # Capture using pyshark
+    # capture = pyshark.LiveCapture(interface=interface_name)
+    # try:
+    #     for packet in capture.sniff_continuously():
+    #         if 'IP' in packet:
+    #             src_ip = packet.ip.src
+    #             dst_ip = packet.ip.dst
+    #             protocol = packet.highest_layer
+    #             print(f"Packet: {protocol} {src_ip} -> {dst_ip}")
+    # except KeyboardInterrupt:
+    #     print("Packet capture stopped by user.")
 except Exception as e:
     print(f"Error: {e}")
 
